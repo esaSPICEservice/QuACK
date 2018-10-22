@@ -14,7 +14,7 @@ CCC_ Parameter descriptions
 !     as returned by dskx02.
 
       integer            plid
-!     INPUTL: ID of the plate on which the point resides, usually as returned
+!     INPUT: ID of the plate on which the point resides, usually as returned
 !     by dskx02.
 
       double precision   x
@@ -64,7 +64,7 @@ CCC_ , Get plate vertex position
 
 CCC_ , Get plate vertex QuACK coordinates
          quack(1,ivrt) = mod( con(ivrt) - 1, nx )
-         quack(2,ivrt) = con(ivrt) / nx
+         quack(2,ivrt) = ( con(ivrt) - 1 ) / nx
 !         print*, ( real( quack(idim,ivrt) ), idim = 1, 2 )
 
       end do
