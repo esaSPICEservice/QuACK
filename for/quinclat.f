@@ -1,6 +1,5 @@
       subroutine quinclat( x, y, lon, lat )
       implicit none
-      include "write_reverse_quinc_data.reverse_dim.par"
 
 CCC_ Parameter descriptions
 
