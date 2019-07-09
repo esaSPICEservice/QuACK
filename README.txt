@@ -1,4 +1,4 @@
-
+  
                The Quncuncial Adaptive Closed Kohonen map
                ******************************************
                              Bjoern Grieger
@@ -87,9 +87,33 @@ so that file needs to be present for compilation.
 *=*=*=*=*=*=*=*=*=*=*=*=
 
   
-  A SPICE Digital Shape Kernel (DSK) of the special QuACK shape model is
-provided in the `dsk' directory. It is based on the triplat version of
-the shape model, cf. section 3.
+  SPICE Digital Shape Kernels (DSKs) of the special QuACK shape model
+are provided in the `dsk' directory.
+
+
+2.1  chury_quack_tri_02_01.bds
+==============================
+  
+  This DSK is based on the triplate shape model `chury_quack_tri_02.ver'
+(3.1.1). It has been created with the mkdsk utility of the SPICE toolkit
+version N0066 and can be used with this version of the toolkit.
+
+
+2.2  chury_quack_tri_01_02.bds
+==============================
+  
+  This DSK is like the former one below based on the triplate shape
+model `chury_quack_tri.ver', see section 3.2.3. However, it has been
+created with the mkdsk utility of the SPICE toolkit version N0066 and
+can be used with this version of the toolkit.
+
+
+2.3  chury_quack_shp.bds
+========================
+  
+  This DSK is based on the triplate shape model `chury_quack_tri.ver',
+see section 3.2.3. It had been created with APIs from the alpha DSK
+toolkit and cannot be used with recent versions of SPICE.
 
 
 3  Shape models in ASCII VER format
@@ -98,35 +122,81 @@ the shape model, cf. section 3.
    
 
 
-3.1  chury_quack_shp.ver
-========================
+3.1  Version 02
+===============
+  
+
+
+3.1.1  chury_quack_tri_02.ver
+-----------------------------
+   
+  This triplate shape model is a slghtly modified version of
+`chury_quack_tri.ver', see section 3.2.3.
+  At each of the four corners of the two squares sewed together, there
+are two quadrangle grid cells which have three points in common. These
+three points should form a straight line on the 3D shape. When computing
+normals at the vertex positions, it was noticed that the center point is
+slightly off the line, which leads to spurious normals at that point and
+its neighbors. The reason of this deviation is not completely clear,
+most probably it is just residual noise from the random optimization
+process. We slightly shift these points to exactly the center of the
+line. There are four points affected (the four corner points of the two
+squares sewed together), but two of them are replicated in the QuACK map
+grid, as the right and the left edge of the side-by-side rectangular
+layout are identical, so six vertex points are slightly shifted. All
+other vertex points remain exactly the same.
+  To create the triplate shape model, each quadrangle of the original
+QuACK map grid is cut into two triangles. Of the two options, previously
+the one which yielded the smaller bend between the two triangles was
+chosen. At the four corners of the two squares sewed together, where two
+adjacent quadrangular cells share three points, this could yield a
+degenerated (zero area) triangle, which is not recommended for a SPICE
+DSK. Therefore, we now chose the option which yields the more similar
+area for the two triangles. Thus, for many quadrangular cells, the
+diagonal along which they are cut into triangles is swapped.
+  Note that this version is so far not available in the quadrangular
+version. That would have the vertex positions of
+`chury_quack_tri_02.ver' but the plate definitions of
+`chury_quack_shp.ver' (3.2.1).
+  Note also that `chury_quack_map.ver' (3.2.2) does not contain 3D
+vertex positions and no triangular plates, so it is still applicable to
+version 02.
+
+
+3.2  Version 01
+===============
+  
+
+
+3.2.1  chury_quack_shp.ver
+--------------------------
    
   This is the rectangular QuACK map of 401 x 201 grid points fitted to
 the surface of the comet. The 80,000 plates are quadrangles. The
 sequence of vertices follows the grid line by line. The first point is
 in the lower left corner. The positions of the grid points on the map
-are explicitly provided by the shape model described in section 3.2.
+are explicitly provided by the shape model described in section 3.2.2.
   As some software only works with triplate shape models (while the VER
 format allows an arbitrary number of corner points for each plate), a
-triplate version is also provided, described in section 3.3.
+triplate version is also provided, described in section 3.2.3.
 
 
-3.2  chury_quack_map.ver
-========================
+3.2.2  chury_quack_map.ver
+--------------------------
    
   This is not really a 3D shape model. It gives the pixel indices of the
 QuACK map grid points on the 2D map. So, x is running from left to
 right, from 0 to 400, y is running from bottom to top, from 0 to 200,
 and z is always zero. The plate description (which just refers to the
 indices of the vertices forming the corner points of the plat) is the
-same as that of the shape model described in section 3.1.
+same as that of the shape model described in section 3.2.1.
 
 
-3.3  chury_quack_tri.ver
-========================
+3.2.3  chury_quack_tri.ver
+--------------------------
    
   This is a triplate version of the quadrangle plate shape model
-described in section 3.1. It is provided as some software only works
+described in section 3.2.1. It is provided as some software only works
 with triplate shape models. Each quadrangle has bee cut into two
 triangle. From the two possibilities to cut the quadrangle, the one that
 yields the smaller kink between the two triangles.
