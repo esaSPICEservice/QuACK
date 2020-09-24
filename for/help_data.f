@@ -131,7 +131,7 @@
      &   "       Read 3D positions from file point",
      &   "s.txt and write the respective",
      &   "       coordinates on the QuACK map in q",
-     &   "uncuncial layout to file",
+     &   "uincuncial layout to file",
      &   "       quincuncial.txt.",
      &   "",
      &   "",

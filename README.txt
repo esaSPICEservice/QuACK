@@ -14,7 +14,12 @@
    shape from randomly presented sample points. The QUACK map can be
    unfolded similarly to the Peirce quincuncial projection of the world.
    This enables us to define unique generalized latitudinal coordinates
-   by associating the two maps. 
+   by associating the two maps.
+   While the grid of supporting points of the QuACK map has a moderate
+   resolution of 401 x 201 points, the projection is performed with
+   subgrid resolution, interpolating between the supporting points.
+   Therefore, even features with much higher resolution can consistently
+   be mapped.  
   
   
 
