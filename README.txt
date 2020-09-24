@@ -23,73 +23,218 @@ Contents
 
    
   
-   - 1  Fortran subroutines 
+   - 1  Command line tool `quack' 
      
-      - 1.1  setup_quack.f 
-      - 1.2  recquack.f 
-      - 1.3  recplquack.f 
-      - 1.4  rplquack.f 
-      - 1.5  quincquad.f 
-      - 1.6  quinclat.f 
-      - 1.7  quack_dim.inc 
-      - 1.8  reverse_quinc_data.f 
-  
-   - 2  Digital Shape kernels 
-     
-      - 2.1  chury_quack_tri_02_01.bds 
-      - 2.2  chury_quack_tri_01_02.bds 
-      - 2.3  chury_quack_shp.bds 
-  
-   - 3  Shape models in ASCII VER format 
-     
-      - 3.1  Version 02 
+      - 1.1  Overview 
+      - 1.2  Making the binary 
+      - 1.3  Input 
+      - 1.4  Output 
         
-         - 3.1.1  chury_quack_tri_02.ver 
+         - 1.4.1  3D coordinates of points projected onto the QuACK
+         shape model surface (option -3) 
+         - 1.4.2  2D coordinates of the position on the QuACK map in
+         hemispheres side by side layout (option -2) 
+         - 1.4.3  2D coordinates of the position on the QuACK map in
+         quincuncial layout (option -5) 
+         - 1.4.4  Generalized longitues and latitudes (option -1) 
      
-      - 3.2  Version 01 
+      - 1.5  Source code 
+  
+   - 2  Fortran subroutines 
+     
+      - 2.1  setup_quack.f 
+      - 2.2  recquack.f 
+      - 2.3  recplquack.f 
+      - 2.4  rplquack.f 
+      - 2.5  quincquad.f 
+      - 2.6  quinclat.f 
+      - 2.7  quack_dim.inc 
+      - 2.8  reverse_quinc_data.f 
+  
+   - 3  Digital Shape kernels 
+     
+      - 3.1  chury_quack_tri_02_01.bds 
+      - 3.2  chury_quack_tri_01_02.bds 
+      - 3.3  chury_quack_shp.bds 
+  
+   - 4  Shape models in ASCII VER format 
+     
+      - 4.1  Version 02 
         
-         - 3.2.1  chury_quack_shp.ver 
-         - 3.2.2  chury_quack_map.ver 
-         - 3.2.3  chury_quack_tri.ver 
+         - 4.1.1  chury_quack_tri_02.ver 
+     
+      - 4.2  Version 01 
+        
+         - 4.2.1  chury_quack_shp.ver 
+         - 4.2.2  chury_quack_map.ver 
+         - 4.2.3  chury_quack_tri.ver 
      
   
-   - 4  Miscellaneous files 
+   - 5  Miscellaneous files 
    
 
 
-1  Fortran subroutines
-*=*=*=*=*=*=*=*=*=*=*=
+1  Command line tool `quack'
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=
 
   
+
+
+1.1  Overview
+=============
+  
+  A *nix style command line tool named `quack' gives easy access to all
+functionalities provided by the Fortran subroutines described in 2.
+Arbitrary 3D points can be projected onto the QuACK map in hemispheres
+side by side or quincuncial layout. Generalized (unambiguous) longitudes
+and latitudes can be computed to use them in any other map projection.
+  `quack' has to be called with the Digital Shape Kernel of a 160,000
+plates QuACK shape model as first argument. The latest version is 
+    dsk/chury_quack_tri_02_01.bds 
+  
+  When called without any arguments or with the --help option, `quack'
+displays a help message.
+
+
+1.2  Making the binary
+======================
+  
+  There is already a binary for PC, Linux, 64bit in the `bin'
+subdirectory called `quack_PC_Linux_64bit'. It also runs in the Linux
+subsystem of Windows 10. If that suits you, just copy it to `quack'.
+  If you have to make your own binary, you need a Fortran compiler and
+the SPICE toolkit suitable for that compiler and your system. Edit the
+`Makefile' to specify in the first two lines the path to your SPICE
+toolkit and the name of your compiler (with options). If you do not use
+the `gfortran' compiler, further changes may be needed.
+  If the Makefile is set, just type `make' in the base directory
+`QuACK'. This should make the binary `quack' in the `bin' directory.
+Call it without any arguments or with the --help option to display a
+help message.
+
+
+1.3  Input
+==========
+   
+  By default, input files are ASCII files and contain coordinates of 3D
+points, one vector per line, separated by blanks or commas. Units are
+kilometers.
+  Depending on the type of output requested, different steps are needed
+for the computation. However, the first step, the projection of the
+input points onto the surface of the QuACK shape model, is needed for
+all types of output, and it is by far the computationally most
+expensive. If you have to process a large number of points and are not
+yet sure what type of output you will finally use, you can have the
+results of this first step written to a file (option -3). This file does
+not only contain the 3D coordinates of the projected surface point, but
+also the plate ID where the surface point resides and the elevation of
+the original point relative to the shape model surface. Later, you can
+use this file of intermediate results as input for further computations
+(option -4), which will then be much faster.
+
+
+1.4  Output
+===========
+  
+  Here, we only elaborate on the meaning of the different output types.
+For instructions on the usage of the options described below, call
+`quack' without any argument or with the --help option.
+
+
+1.4.1  3D coordinates of points projected onto the QuACK shape model
+--------------------------------------------------------------------
+surface (option -3)
+-------------------
+  
+  This was already described in 1.3.
+
+
+1.4.2  2D coordinates of the position on the QuACK map in hemispheres
+---------------------------------------------------------------------
+side by side layout (option -2)
+-------------------------------
+  
+  Each (approximate) hemisphere is mapped to a square. The Northern
+hemisphere is on the left, the Southern one on the right. Map width is
+2, map height is 1. (0,0) is in the lower left corner, first coordinate
+is to the right, second is up. As third value the elevation of the
+original point relative to the QuACK shape model surface is written to
+each line.
+
+
+1.4.3  2D coordinates of the position on the QuACK map in quincuncial
+---------------------------------------------------------------------
+layout (option -5)
+------------------
+  
+  The square to which the Norther hemisphere is mapped is rotated 45 deg
+clockwise and the Southern hemisphere is diagonally cut into four pieces
+and these are attached with the long edges appropriately to the Northern
+hemisphere. Width and height of the map are 1. (0,0) is in the lower
+left corner, first coordinate is to the right, second is up. As third
+value the elevation of the original point relative to the QuACK shape
+model surface is written to each line.
+
+
+1.4.4  Generalized longitues and latitudes (option -1)
+------------------------------------------------------
+  
+  These generalized longitudes and latitudes are unambiguous  for all
+points on the comet surface. The North pole is near 90 deg N, the South
+pole is near 90 deg South, and the equator is near 0 deg latitude.
+However, the generalized coordinates differ from the original longitude
+and latitude, in particular in the overhung areas, where the latter are
+ambiguous. The generalized coordinates can be used to display the
+complete comet surface in a generalized version of any map projection.
+The QuACK map in particular can be understood as a generalized version
+of the Peirce quincuncial projection. Longitude/latitude units are
+degrees. As third value the elevation of the original point relative to
+the QuACK shape model surface is written to each line.
+
+
+1.5  Source code
+================
+  
+  The source code of the main program of the `quack' command line tool
+is in the file `for/quack.f'. With the exception of the superseded
+subroutine `rplquack.f', all files in the `for' directory are linked or
+included.
+
+
+2  Fortran subroutines
+*=*=*=*=*=*=*=*=*=*=*=
+
+   
   Fortran subroutines are provided in the `for' directory. Each file
 contains exactly one subroutine, the name of which equals the basename
-of the file.
+of the file. The two lower level routines in the files `ixiy2ipos.f' and
+`rplnorm2.f' are not yet documented.
 
 
-1.1  setup_quack.f
+2.1  setup_quack.f
 ==================
    
   This subroutine has to be called before the first call to `recquack'
-(1.2) or `recplquack' (1.3). As parameter, the file name of the Digital
+(2.2) or `recplquack' (2.3). As parameter, the file name of the Digital
 Shape Kernel (DSK) of the  QuACK shape model to be used has to be
 provided, including the full absolute path or the relative path from the
 working directory. The latest version of the QuACK shape mode is
-`chury_quack_tri_02_01.bds', cf. 2.
-  This subroutine includes the file `quack_dim.inc' (1.7), so that file
+`chury_quack_tri_02_01.bds', cf. 3.
+  This subroutine includes the file `quack_dim.inc' (2.7), so that file
 needs to be present for compilation.
   This subroutine needs the SPICE libraries `spicelib.a' and `support.a'
 to be linked.
 
 
-1.2  recquack.f
+2.2  recquack.f
 ===============
    
   Before calling this subroutine for the first time, the subroutine
-`setup_quack' (1.1) has to be called.
+`setup_quack' (2.1) has to be called.
   This subroutine projects an arbitrary 3D point onto the surface of the
 QuACK shape model. It returns also the index of the plate where the
 projected surface point resides, so the surface point and the plate
-index can be used as input for `recplquac' (1.3). A detailed description
+index can be used as input for `recplquac' (2.3). A detailed description
 of input and output parameters is provided at the beginning of the
 source code.
   The direction of the projection is the surface normal at the projected
@@ -103,18 +248,18 @@ at the corners precomputed as the mean of the adjacent cells. Thus the
 surface normal is not assumed to be constant over a plate, but
 continuously varying. Therefore, the projection is realized with subgrid
 accuracy.
-  This subroutine includes the file `quack_dim.inc' (1.7), so that file
+  This subroutine includes the file `quack_dim.inc' (2.7), so that file
 needs to be present for compilation.
   This subroutine needs the SPICE libraries `spicelib.a' and `support.a'
 to be linked.
 
 
-1.3  recplquack.f
+2.3  recplquack.f
 =================
    
-  This subroutine supersedes `rplquack.f' (1.4).
+  This subroutine supersedes `rplquack.f' (2.4).
   Before calling this subroutine for the first time, the subroutine
-`setup_quack' (1.1) has to be called.
+`setup_quack' (2.1) has to be called.
   This subroutine converts 3D rectangular coordinates of a surface point
 and known plate index to 2D coordinates on the QuACK map. A detailed
 description of input and output parameters is provided at the beginning
@@ -123,18 +268,18 @@ of the source code.
 viewing ray with the surface of the QuACK shape model, the plate index
 of the intersection point, which is needed as input for `recplquack',
 should be known. If the 3D point has been obtained by other means and
-the plate index is not nown, the subroutine `recquack' (1.2) can be used
+the plate index is not nown, the subroutine `recquack' (2.2) can be used
 to get it.
-  This subroutine includes the file `quack_dim.inc' (1.7), so that file
+  This subroutine includes the file `quack_dim.inc' (2.7), so that file
 needs to be present for compilation.
   This subroutine needs the SPICE libraries `spicelib.a' and `support.a'
 to be linked.
 
 
-1.4  rplquack.f
+2.4  rplquack.f
 ===============
    
-  This subroutine is superseded by `recplquack.f' (1.3), which does not
+  This subroutine is superseded by `recplquack.f' (2.3), which does not
 require any more to open the QuACK Digital Shape Kernel (DSK) manually.
   Before calling this subroutine, the QuACK Digital Shape Kernel (DSK)
 has to be loaded by the following calls to SPICE DSK subroutines: 
@@ -157,7 +302,7 @@ as input for the call to `rplquack'.
 to be linked. 
 
 
-1.5  quincquad.f
+2.5  quincquad.f
 ================
   
   This subroutine converts from the hemispheres side-by-side layout to
@@ -174,7 +319,7 @@ diagonals into four pieces, which are attached to the four edges of the
 Northern hemisphere.
 
 
-1.6  quinclat.f
+2.6  quinclat.f
 ===============
    
   This subroutine assigns to a point on the QuACK map (given in
@@ -190,24 +335,24 @@ needs to be present for compilation.
 to be linked.
 
 
-1.7  quack_dim.inc
+2.7  quack_dim.inc
 ==================
    
   This file defines array dimension parameters. It is included by
-`setup_quack' (1.1), `recquack' (1.2), and `recplquack' (1.3). It needs
+`setup_quack' (2.1), `recquack' (2.2), and `recplquack' (2.3). It needs
 to be updated if the dimensions of the QuACK shape model have changed or
 if a new SPICE version has changed a respective parameter value. Details
 on the latter are at the end of the source code. 
 
 
-1.8  reverse_quinc_data.f
+2.8  reverse_quinc_data.f
 =========================
   
   This fils contains numerical values needed for the reverse quincuncial
-projection. It is included by 1.6.
+projection. It is included by 2.6.
 
 
-2  Digital Shape kernels
+3  Digital Shape kernels
 *=*=*=*=*=*=*=*=*=*=*=*=
 
    
@@ -215,47 +360,47 @@ projection. It is included by 1.6.
 are provided in the `dsk' directory.
 
 
-2.1  chury_quack_tri_02_01.bds
+3.1  chury_quack_tri_02_01.bds
 ==============================
   
   This DSK is based on the triplate shape model `chury_quack_tri_02.ver'
-(3.1.1). It has been created with the mkdsk utility of the SPICE toolkit
+(4.1.1). It has been created with the mkdsk utility of the SPICE toolkit
 version N0066 and can be used with this version of the toolkit.
 
 
-2.2  chury_quack_tri_01_02.bds
+3.2  chury_quack_tri_01_02.bds
 ==============================
   
   This DSK is like the former one below based on the triplate shape
-model `chury_quack_tri.ver', see section 3.2.3. However, it has been
+model `chury_quack_tri.ver', see section 4.2.3. However, it has been
 created with the mkdsk utility of the SPICE toolkit version N0066 and
 can be used with this version of the toolkit.
 
 
-2.3  chury_quack_shp.bds
+3.3  chury_quack_shp.bds
 ========================
   
   This DSK is based on the triplate shape model `chury_quack_tri.ver',
-see section 3.2.3. It had been created with APIs from the alpha DSK
+see section 4.2.3. It had been created with APIs from the alpha DSK
 toolkit and cannot be used with recent versions of SPICE.
 
 
-3  Shape models in ASCII VER format
+4  Shape models in ASCII VER format
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
    
 
 
-3.1  Version 02
+4.1  Version 02
 ===============
   
 
 
-3.1.1  chury_quack_tri_02.ver
+4.1.1  chury_quack_tri_02.ver
 -----------------------------
    
   This triplate shape model is a slghtly modified version of
-`chury_quack_tri.ver', see section 3.2.3.
+`chury_quack_tri.ver', see section 4.2.3.
   At each of the four corners of the two squares sewed together, there
 are two quadrangle grid cells which have three points in common. These
 three points should form a straight line on the 3D shape. When computing
@@ -281,31 +426,31 @@ diagonal along which they are cut into triangles is swapped.
   Note that this version is so far not available in the quadrangular
 version. That would have the vertex positions of
 `chury_quack_tri_02.ver' but the plate definitions of
-`chury_quack_shp.ver' (3.2.1).
-  Note also that `chury_quack_map.ver' (3.2.2) does not contain 3D
+`chury_quack_shp.ver' (4.2.1).
+  Note also that `chury_quack_map.ver' (4.2.2) does not contain 3D
 vertex positions and no triangular plates, so it is still applicable to
 version 02.
 
 
-3.2  Version 01
+4.2  Version 01
 ===============
   
 
 
-3.2.1  chury_quack_shp.ver
+4.2.1  chury_quack_shp.ver
 --------------------------
    
   This is the rectangular QuACK map of 401 x 201 grid points fitted to
 the surface of the comet. The 80,000 plates are quadrangles. The
 sequence of vertices follows the grid line by line. The first point is
 in the lower left corner. The positions of the grid points on the map
-are explicitly provided by the shape model described in section 3.2.2.
+are explicitly provided by the shape model described in section 4.2.2.
   As some software only works with triplate shape models (while the VER
 format allows an arbitrary number of corner points for each plate), a
-triplate version is also provided, described in section 3.2.3.
+triplate version is also provided, described in section 4.2.3.
 
 
-3.2.2  chury_quack_map.ver
+4.2.2  chury_quack_map.ver
 --------------------------
    
   This is not really a 3D shape model. It gives the pixel indices of the
@@ -313,20 +458,20 @@ QuACK map grid points on the 2D map. So, x is running from left to
 right, from 0 to 400, y is running from bottom to top, from 0 to 200,
 and z is always zero. The plate description (which just refers to the
 indices of the vertices forming the corner points of the plat) is the
-same as that of the shape model described in section 3.2.1.
+same as that of the shape model described in section 4.2.1.
 
 
-3.2.3  chury_quack_tri.ver
+4.2.3  chury_quack_tri.ver
 --------------------------
    
   This is a triplate version of the quadrangle plate shape model
-described in section 3.2.1. It is provided as some software only works
+described in section 4.2.1. It is provided as some software only works
 with triplate shape models. Each quadrangle has bee cut into two
 triangle. From the two possibilities to cut the quadrangle, the one that
 yields the smaller kink between the two triangles.
 
 
-4  Miscellaneous files
+5  Miscellaneous files
 *=*=*=*=*=*=*=*=*=*=*=
 
   

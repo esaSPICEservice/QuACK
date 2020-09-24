@@ -52,7 +52,6 @@ CCC_. Variables
       double precision   normal(3)
       double precision   pc(3)
       double precision   phelp(3)
-      integer            plid
       integer            plod
       double precision   pold(3)
       logical            subsrfc
