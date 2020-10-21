@@ -15,22 +15,26 @@
 !-       4.1.3 Parameter for option 2
 !-       4.1.4 Parameter for option 5
 !-       4.1.5 Parameter for option 1
-!-       4.1.6 Parameter for option c
+!-       4.1.6 Parameter for option s
+!-       4.1.7 Parameter for option c
 !-   4.2 Case option
 !-       4.2.1 Long option
 !-             4.2.1.1 Print help message
 !-             4.2.1.2 Invalid long option
 !-       4.2.2 Remember which args are options
-!-       4.2.3 Option to read data formally written with option 3
-!-             4.2.3.1 Handle adjacent additional option
+!-       4.2.3 Options without parmeter
+!-             4.2.3.1 Option to read data formally written with option 3
+!-             4.2.3.2 Option to read generalized longitudes and latitudes
+!-             4.2.3.3 Other option
 !-       4.2.4 Option to write 3D positions on QuACK shape model
 !-       4.2.5 Option to write QuACK map coordinates in side by side layout
 !-       4.2.6 Option to write QuACK map coordinates in quincuncial layout
 !-       4.2.7 Option to write generalized longitudes and latitudes
-!-       4.2.8 Option to write to console
-!-       4.2.9 Invalid option
-!-       4.2.10 Check output type specified for console
-!-       4.2.11 Open output files
+!-       4.2.8 Option to write coordinates in South centered quincuncial layout
+!-       4.2.9 Option to write to console
+!-       4.2.10 Invalid option
+!-       4.2.11 Check output type specified for console
+!-       4.2.12 Open output files
 !- 5 Loop through file arguments
 !-   5.1 Check that it is not an option
 !-   5.2 Case first argument
@@ -38,11 +42,13 @@
 !-       5.3.1 Open input file
 !-       5.3.2 Loop through file records
 !-             5.3.2.1 Get 3D position on QuACK shape model
-!-             5.3.2.2 Write 3D position to output file
-!-             5.3.2.3 Get QuACK map coordinates for side-by-side layout
-!-             5.3.2.4 Write map coordinates to output file
-!-             5.3.2.5 Get and write map coordinates for quincuncial layout
-!-             5.3.2.6 Get and write generalized longitudes and latitudes
+!-             5.3.2.2 Convert generalized longitude and latitude to quack map
+!-             5.3.2.3 Write 3D position to output file
+!-             5.3.2.4 Get QuACK map coordinates for side-by-side layout
+!-             5.3.2.5 Write map coordinates to output file
+!-             5.3.2.6 Get and write map coordinates for quincuncial layout
+!-             5.3.2.7 Get and write generalized longitudes and latitudes
+!-             5.3.2.8 Get and write map coordinates for South centered layout
 !-       5.3.3 Close input file
 !-       5.3.4 Print statistics
 !- 6 Check if any input was processed
@@ -63,14 +69,17 @@
       character*(1000)   file2
       character*(1000)   file3
       character*(1000)   file5
+      character*(1000)   file_s
       integer            iarg
       integer            idim
+      integer            inop
       integer            inot4
       integer            iopt
 !      character*(1000)   isarg
       double precision   lat
       double precision   lon
       logical            lonlat
+      logical            lonlatin
       integer            narg
       integer            ncpos
       integer            nopt
@@ -90,8 +99,10 @@
       double precision   q
       double precision   quality
       logical            quincuncial
+      double precision   rpd
       logical            sidebyside
       logical            stdin
+      logical            south
       logical            withplid
       double precision   x
       double precision   y
@@ -107,6 +118,8 @@
       lonlat      = .false.
       withplid    = .false.
       console     = .false.
+      lonlatin    = .false.
+      south       = .false.
       nptot       = 0
 
 !****************************************************************************!
@@ -180,6 +193,14 @@
 
 !----------------------------------------------------------------------------!
 !- 4.1.6
+!### Parameter for option s
+!----------------------------------------------------------------------------!
+            else if ( option .eq. 's' ) then
+               file_s = arg
+               npar = npar - 1
+
+!----------------------------------------------------------------------------!
+!- 4.1.7
 !### Parameter for option c
 !----------------------------------------------------------------------------!
             else if ( option .eq. 'c' ) then
@@ -231,37 +252,48 @@
 
 !----------------------------------------------------------------------------!
 !- 4.2.3
-!### Option to read data formally written with option 3
+!### Options without parmeter
 !----------------------------------------------------------------------------!
-            if ( option .eq. '4' ) then
-               withplid = .true.
+            if ( option .eq. '4' .or. option .eq. 'l' ) then
+               do inop = 2, len_trim( arg )
 
 !............................................................................!
 !- 4.2.3.1
-!#### Handle adjacent additional option
+!#### Option to read data formally written with option 3
 !............................................................................!
-!   Option 4 is the only one without parameter, so we only have to check
-!   one adjacent option, as that requires a parameter. If we had more
-!   than one option without paramter, this would be (even more) complicated. 
-               if ( len_trim( arg ) .gt. 2 ) then
-                  inot4 = ncpos( trim(arg), '4', 3 )
-!                  print*, 'inot4 =', inot4
-                  if ( inot4 .ge. 1 ) then
-                     option = arg(inot4:inot4)
-                     chelp = arg
-                     arg = '-'//chelp(inot4:)
-                  end if
-               end if
+                  if ( arg(inop:inop) .eq. '4' ) then
+                     withplid = .true.
+                     lonlatin = .false.
+                     option = ' '
 
+!............................................................................!
+!- 4.2.3.2
+!#### Option to read generalized longitudes and latitudes
+!............................................................................!
+                  else if ( arg(inop:inop) .eq. 'l' ) then
+                     lonlatin = .true.
+                     withplid = .false.
+                     option = ' '
+
+!............................................................................!
+!- 4.2.3.3
+!#### Other option
+!............................................................................!
+                  else
+                     option = arg(inop:inop)
+                     chelp = arg
+                     arg = '-'//chelp(inop:)
+                     exit
+
+                  end if
+               end do
             end if
-!            print*, 'option = ', option
-            if ( option .eq. '4' ) then
 
 !----------------------------------------------------------------------------!
 !- 4.2.4
 !### Option to write 3D positions on QuACK shape model
 !----------------------------------------------------------------------------!
-            else if ( option .eq. '3' ) then
+            if ( option .eq. '3' ) then
                onshape = .true.
                if ( len_trim( arg ) .gt. 2 ) then
                   read( arg(3:), '(a)' ) file3
@@ -331,6 +363,24 @@
 
 !----------------------------------------------------------------------------!
 !- 4.2.8
+!### Option to write coordinates in South centered quincuncial layout
+!----------------------------------------------------------------------------!
+            else if ( option .eq. 's' ) then
+               south = .true.
+               if ( len_trim( arg ) .gt. 2 ) then
+                  read( arg(3:), '(a)' ) file_s
+               else
+                  if ( iarg .eq. narg ) then
+                     print '(a)', 'quack: option requires an '//
+     &                            "argument -- '"//option//"'"
+                     stop 1
+                  else
+                     npar = 1
+                  end if
+               end if
+
+!----------------------------------------------------------------------------!
+!- 4.2.9
 !### Option to write to console
 !----------------------------------------------------------------------------!
             else if ( option .eq. 'c' ) then
@@ -348,10 +398,10 @@
                end if
 
 !----------------------------------------------------------------------------!
-!- 4.2.9
+!- 4.2.10
 !### Invalid option
 !----------------------------------------------------------------------------!
-            else
+            else if ( option .ne. ' ' ) then
                print '(a)', 'quack: invalid option -- '//
      &                      "'"//option//"'"
                stop 1
@@ -367,7 +417,7 @@
 !      end do
 
 !----------------------------------------------------------------------------!
-!- 4.2.10
+!- 4.2.11
 !### Check output type specified for console
 !----------------------------------------------------------------------------!
       if ( console ) then
@@ -382,9 +432,13 @@
          else if ( outtype .eq. '1' ) then
             print*, 'Will write generalized longitudes and latitudes '//
      &              'to console.'
+         else if ( outtype .eq. 's' ) then
+            print*, 'Will write South centered '//
+     &              'quincuncial map coordinates '//
+     &              'to console.'
          else
             print '(a)', 'quack: invalid output type: '//
-     &                      "'"//trim(outtype)//"'"
+     &                   "'"//trim(outtype)//"'"
             stop 1
          end if
       else
@@ -392,7 +446,7 @@
       end if
 
 !----------------------------------------------------------------------------!
-!- 4.2.11
+!- 4.2.12
 !### Open output files
 !----------------------------------------------------------------------------!
       out = .false.
@@ -423,10 +477,17 @@
          open( 21, file = trim( file1 ) )
          out = .true.
       end if
+      if ( south ) then
+         print*, 'Will write South centered '//
+     &           'quincuncial map coordinates '//
+     &           'to file ',
+     &           trim( file_s ), '.'
+         open( 26, file = trim( file_s ) )
+         out = .true.
+      end if
       if ( outtype .eq. ' ' .and. .not. out ) then
          print*, 'Warning: no output option given.'
       end if
-
 
 !****************************************************************************!
 !- 5
@@ -489,6 +550,15 @@
                      else
                         read( 11, *, end = 4000 ) psrfc, plid, elev
                      end if
+                  else if ( lonlatin ) then
+                     if ( stdin ) then
+                        read(  5, *, end = 4000 ) lon, lat, elev
+                     else
+                        read( 11, *, end = 4000 ) lon, lat, elev
+                     end if
+                     lon = lon * rpd()
+                     lat = lat * rpd()
+!                     elev = 0d0
                   else
                      if ( stdin ) then
                         read(  5, *, end = 4000 ) point
@@ -505,37 +575,53 @@
 !............................................................................!
                   if ( ( onshape .or. sidebyside .or. quincuncial .or.
      &                   lonlat .or. outtype .ne. ' ')
-     &                 .and. .not. withplid ) then
+     &                 .and. .not. withplid
+     &                 .and. .not. lonlatin ) then
                      call recquack( point, psrfc, plid, elev, quality  )
                   end if
 
 !............................................................................!
 !- 5.3.2.2
-!#### Write 3D position to output file
+!#### Convert generalized longitude and latitude to quack map
 !............................................................................!
-                  if ( onshape ) then
-                     write( 23, * )
-     &                  ( ( psrfc(idim) ), idim = 1, 3 ), plid,
-     &                  ( elev )
-                  end if
-                  if ( outtype .eq. '3' ) then
-                     print*,
-     &                  ( real( psrfc(idim) ), idim = 1, 3 ), plid,
-     &                  real( elev )
-                  end if
+                  if ( lonlatin ) then
+                     call latquinc( lon, lat, x, y )
+                     if ( onshape .or. outtype .eq. '3' ) then
+                        print*, 'Output option/type 3 not supported ' //
+     &                          'for input option l.'
+                     end if
+                  else
 
 !............................................................................!
 !- 5.3.2.3
-!#### Get QuACK map coordinates for side-by-side layout
+!#### Write 3D position to output file
 !............................................................................!
-                  if ( sidebyside .or. quincuncial .or. lonlat .or.
-     &                 outtype .eq. '2' .or. outtype .eq. '5' .or.
-     &                 outtype .eq. '1' ) then
-                     call recplquack( psrfc, plid, x, y  )
-                  end if
+                     if ( onshape ) then
+                        write( 23, * )
+     &                     ( real( psrfc(idim) ), idim = 1, 3 ), plid,
+     &                     real( elev )
+                     end if
+                     if ( outtype .eq. '3' ) then
+                        print*,
+     &                     ( real( psrfc(idim) ), idim = 1, 3 ), plid,
+     &                     real( elev )
+                     end if
 
 !............................................................................!
 !- 5.3.2.4
+!#### Get QuACK map coordinates for side-by-side layout
+!............................................................................!
+                     if ( sidebyside .or. quincuncial .or. lonlat .or.
+     &                    south .or.
+     &                    outtype .eq. '2' .or. outtype .eq. '5' .or.
+     &                    outtype .eq. '1' .or. outtype .eq. 's' ) then
+                        call recplquack( psrfc, plid, x, y  )
+                     end if
+
+                  end if
+
+!............................................................................!
+!- 5.3.2.5
 !#### Write map coordinates to output file
 !............................................................................!
                   if ( sidebyside ) then
@@ -546,7 +632,7 @@
                   end if
 
 !............................................................................!
-!- 5.3.2.5
+!- 5.3.2.6
 !#### Get and write map coordinates for quincuncial layout
 !............................................................................!
                   if ( quincuncial .or. outtype .eq. '5' ) then
@@ -562,7 +648,7 @@
                   end if
 
 !............................................................................!
-!- 5.3.2.6
+!- 5.3.2.7
 !#### Get and write generalized longitudes and latitudes
 !............................................................................!
                   if ( lonlat .or. outtype .eq. '1' ) then
@@ -574,6 +660,24 @@
                      if ( outtype .eq. '1' ) then
                         print*, real( lon * dpr() ),
      &                          real( lat * dpr() ), real( elev )
+                     end if
+                  end if
+
+!............................................................................!
+!- 5.3.2.8
+!#### Get and write map coordinates for South centered layout
+!............................................................................!
+                  if ( south .or. outtype .eq. 's' ) then
+                     x = 2d0 - x
+                     y = 1d0 - y
+                     call quincquad( x, y, p, q  )
+                     if ( south ) then
+                        write( 26, * ) real( p ), real( q ),
+     &                                 real( elev )
+                     end if
+                     if ( outtype .eq. 's' ) then
+                        print*, real( p ), real( q ),
+     &                          real( elev )
                      end if
                   end if
 

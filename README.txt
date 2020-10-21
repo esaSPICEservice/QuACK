@@ -13,8 +13,8 @@
    like a common rectangular Kohonen map. The adaptive map "learns" the
    shape from randomly presented sample points. The QUACK map can be
    unfolded similarly to the Peirce quincuncial projection of the world.
-   This enables us to define unique generalized latitudinal coordinates
-   by associating the two maps.
+   This enables us to define unambiguous generalized latitudinal
+   coordinates by associating the two maps.
    While the grid of supporting points of the QuACK map has a moderate
    resolution of 401 x 201 points, the projection is performed with
    subgrid resolution, interpolating between the supporting points.
@@ -41,7 +41,9 @@ Contents
          hemispheres side by side layout (option -2) 
          - 1.4.3  2D coordinates of the position on the QuACK map in
          quincuncial layout (option -5) 
-         - 1.4.4  Generalized longitues and latitudes (option -1) 
+         - 1.4.4  QuACK map in quincuncial layout centered around the
+         South pole (option -s) 
+         - 1.4.5  Generalized longitues and latitudes (option -1) 
      
       - 1.5  Source code 
   
@@ -92,9 +94,12 @@ Contents
 functionalities provided by the Fortran subroutines described in 2.
 Arbitrary 3D points can be projected onto the QuACK map in hemispheres
 side by side or quincuncial layout. Generalized (unambiguous) longitudes
-and latitudes can be computed to use them in any other map projection.
-  `quack' has to be called with the Digital Shape Kernel of a 160,000
-plates QuACK shape model as first argument. The latest version is 
+and latitudes can be computed to use them in any other map projection or
+to rotate them and feed them back to quack to create traverse or oblique
+aspects (2) of the QuACK map.
+  The command `quack' has to be called with the Digital Shape Kernel of
+a 160,000 plates QuACK shape model as first argument. The latest version
+is 
     dsk/chury_quack_tri_02_01.bds 
   
   When called without any arguments or with the --help option, `quack'
@@ -136,6 +141,17 @@ also the plate ID where the surface point resides and the elevation of
 the original point relative to the shape model surface. Later, you can
 use this file of intermediate results as input for further computations
 (option -4), which will then be much faster.
+  Input files may also contain generalized longitudes and latitudes
+(option -l). The purpose of this is to enable the creation of traverse
+or oblique aspects of the QuACK map. Generalized longitudes and
+latitudes written by quack (cf. 1.4.5), can be rotated and fed back into
+quack. Rotation around the z-axis (which means just adding a constant
+longitude) yields a traverse aspect, any more general rotation yields an
+oblique aspect. For consistency with the quack output, the input is
+expected to provide with each longitude/latitude pair also as third
+value the elevation of the original point relative to the QuACK shape
+model surface. The elevation is just propagated to the output, so at can
+safely be given as 0 if not available.
 
 
 1.4  Output
@@ -175,15 +191,31 @@ layout (option -5)
   The square to which the Norther hemisphere is mapped is rotated 45 deg
 clockwise and the Southern hemisphere is diagonally cut into four pieces
 and these are attached with the long edges appropriately to the Northern
-hemisphere. Width and height of the map are 1. (0,0) is in the lower
-left corner, first coordinate is to the right, second is up. As third
-value the elevation of the original point relative to the QuACK shape
-model surface is written to each line.
+hemisphere. The North pole is approximately in the center, the South
+pole is close to the four corners (which all represent the same point).
+Width and height of the map are 1. (0,0) is in the lower left corner,
+first coordinate is to the right, second is up. As third value the
+elevation of the original point relative to the QuACK shape model
+surface is written to each line.
 
 
-1.4.4  Generalized longitues and latitudes (option -1)
-------------------------------------------------------
+1.4.4  QuACK map in quincuncial layout centered around the South pole
+---------------------------------------------------------------------
+(option -s)
+-----------
   
+  Similar to option 5, but here the Southern hemisphere is left intact
+and the Northern one is cut into four pieces, which are attached to the
+Southern one. The South pole is approximately in the center, the North
+pole is close to the four corner points. Width and height of the map
+are 1. (0,0) is in the lower left corner, first coordinate is to the
+right, second is up. As third value the elevation of the original point
+relative to the QuACK shape model surface is written to each line.
+
+
+1.4.5  Generalized longitues and latitudes (option -1)
+------------------------------------------------------
+   
   These generalized longitudes and latitudes are unambiguous  for all
 points on the comet surface. The North pole is near 90 deg N, the South
 pole is near 90 deg South, and the equator is near 0 deg latitude.
@@ -192,9 +224,12 @@ and latitude, in particular in the overhung areas, where the latter are
 ambiguous. The generalized coordinates can be used to display the
 complete comet surface in a generalized version of any map projection.
 The QuACK map in particular can be understood as a generalized version
-of the Peirce quincuncial projection. Longitude/latitude units are
-degrees. As third value the elevation of the original point relative to
-the QuACK shape model surface is written to each line.
+of the Peirce quincuncial projection. The generalized longitudes and
+latitudes computed by quack can be rotated and fed back into quack to
+create a traverse or oblique aspect of the QuACK map, cf. 1.3.
+Longitude/latitude units are degrees. As third value the elevation of
+the original point relative to the QuACK shape model surface is written
+to each line.
 
 
 1.5  Source code
@@ -212,8 +247,9 @@ included.
    
   Fortran subroutines are provided in the `for' directory. Each file
 contains exactly one subroutine, the name of which equals the basename
-of the file. The two lower level routines in the files `ixiy2ipos.f' and
-`rplnorm2.f' are not yet documented.
+of the file, with the exception of the two lower level routines in the
+files `ixiy2ipos2.f' and `rplnorm2.f'. These are also not yet documented
+below.
 
 
 2.1  setup_quack.f
@@ -330,10 +366,10 @@ Northern hemisphere.
   This subroutine assigns to a point on the QuACK map (given in
 hemispheres side-by-side layout) "generalized longitude and latitude"
 which are obtained by associating the point with the respective point on
-Peirce quincuncial projection (2). These generalized latitudinal
-coordinates can be used for any standard global map projection, e. g.,
-cylindrical equidistant. A detailed description of input and output
-parameters is provided at the beginning of the source code.
+Peirce quincuncial projection. These generalized latitudinal coordinates
+can be used for any standard global map projection, e. g., cylindrical
+equidistant. A detailed description of input and output parameters is
+provided at the beginning of the source code.
   This subroutine includes the file `reverse_quinc_data.f', so that file
 needs to be present for compilation.
   This subroutine needs the SPICE libraries `spicelib.a' and `support.a'
@@ -501,8 +537,9 @@ point the x, y, and z coordinate on the comet surface respectively.
  (1) Grieger, B. (2019). "Quincuncial adaptive closed Kohonen (QuACK)
    map for the irregularly shaped comet 67P/Churyumov-Gerasimenko". A&A
    630, A1. https://doi.org/10.1051/0004-6361/201834841
- (2) Grieger, B. (2020). "Optimized global map projections for specific
+ (2) Useful oblique aspects of Earth map projectios are discussed in
+   Grieger, B. (2020), "Optimized global map projections for specific
    applications: the triptychial projection and the Spilhaus
-   projection". EGU2020-9885.
+   projection", EGU2020-9885,
    https://doi.org/10.5194/egusphere-egu2020-9885
  (3) http://hevea.inria.fr/index.html
