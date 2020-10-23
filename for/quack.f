@@ -574,7 +574,7 @@
 !#### Get 3D position on QuACK shape model
 !............................................................................!
                   if ( ( onshape .or. sidebyside .or. quincuncial .or.
-     &                   lonlat .or. outtype .ne. ' ')
+     &                   lonlat .or. south .or. outtype .ne. ' ')
      &                 .and. .not. withplid
      &                 .and. .not. lonlatin ) then
                      call recquack( point, psrfc, plid, elev, quality  )
