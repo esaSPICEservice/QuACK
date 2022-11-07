@@ -97,12 +97,14 @@
       double precision   point(3)
       double precision   psrfc(3)
       double precision   q
-      double precision   quality
+!      double precision   quality ! WRONG in 1.9 !!!
+      integer            quality
       logical            quincuncial
       double precision   rpd
       logical            sidebyside
       logical            stdin
       logical            south
+      logical            trans05
       logical            withplid
       double precision   x
       double precision   y
@@ -120,6 +122,7 @@
       console     = .false.
       lonlatin    = .false.
       south       = .false.
+      trans05     = .false.
       nptot       = 0
 
 !****************************************************************************!
@@ -195,7 +198,7 @@
 !- 4.1.6
 !### Parameter for option s
 !----------------------------------------------------------------------------!
-            else if ( option .eq. 's' ) then
+            else if ( option .eq. 's' .or. option .eq. 't' ) then
                file_s = arg
                npar = npar - 1
 
@@ -365,7 +368,7 @@
 !- 4.2.8
 !### Option to write coordinates in South centered quincuncial layout
 !----------------------------------------------------------------------------!
-            else if ( option .eq. 's' ) then
+            else if ( option .eq. 's' .or. option .eq. 't' ) then
                south = .true.
                if ( len_trim( arg ) .gt. 2 ) then
                   read( arg(3:), '(a)' ) file_s
@@ -377,6 +380,9 @@
                   else
                      npar = 1
                   end if
+               end if
+               if ( option .eq. 't' ) then
+                  trans05 = .true.
                end if
 
 !----------------------------------------------------------------------------!
@@ -435,7 +441,11 @@
          else if ( outtype .eq. 's' ) then
             print*, 'Will write South centered '//
      &              'quincuncial map coordinates '//
-     &              'to console.'
+     &              '[0.0,1.0] to console.'
+         else if ( outtype .eq. 't' ) then
+            print*, 'Will write South centered '//
+     &              'quincuncial map coordinates '//
+     &              '[-0.5,0.5] to console.'
          else
             print '(a)', 'quack: invalid output type: '//
      &                   "'"//trim(outtype)//"'"
@@ -478,10 +488,17 @@
          out = .true.
       end if
       if ( south ) then
-         print*, 'Will write South centered '//
-     &           'quincuncial map coordinates '//
-     &           'to file ',
-     &           trim( file_s ), '.'
+         if ( .not. trans05 ) then
+            print*, 'Will write South centered '//
+     &              'quincuncial map coordinates '//
+     &              '[0.0,1.0] to file ',
+     &              trim( file_s ), '.'
+         else
+            print*, 'Will write South centered '//
+     &              'quincuncial map coordinates '//
+     &              '[-0.5,0.5] to file ',
+     &              trim( file_s ), '.'
+         end if
          open( 26, file = trim( file_s ) )
          out = .true.
       end if
@@ -574,7 +591,7 @@
 !#### Get 3D position on QuACK shape model
 !............................................................................!
                   if ( ( onshape .or. sidebyside .or. quincuncial .or.
-     &                   lonlat .or. south .or. outtype .ne. ' ')
+     &                   lonlat .or. south .or. outtype .ne. ' '       )
      &                 .and. .not. withplid
      &                 .and. .not. lonlatin ) then
                      call recquack( point, psrfc, plid, elev, quality  )
@@ -614,7 +631,8 @@
                      if ( sidebyside .or. quincuncial .or. lonlat .or.
      &                    south .or.
      &                    outtype .eq. '2' .or. outtype .eq. '5' .or.
-     &                    outtype .eq. '1' .or. outtype .eq. 's' ) then
+     &                    outtype .eq. '1' .or. outtype .eq. 's' .or.
+     &                    outtype .eq. 't' ) then
                         call recplquack( psrfc, plid, x, y  )
                      end if
 
@@ -667,15 +685,20 @@
 !- 5.3.2.8
 !#### Get and write map coordinates for South centered layout
 !............................................................................!
-                  if ( south .or. outtype .eq. 's' ) then
+                  if ( south .or. outtype .eq. 's' .or.
+     &                            outtype .eq. 't'      ) then
                      x = 2d0 - x
                      y = 1d0 - y
                      call quincquad( x, y, p, q  )
+                     if ( trans05 .or. outtype .eq. 't' ) then
+                        p = p - 0.5d0
+                        q = q - 0.5d0
+                     end if
                      if ( south ) then
                         write( 26, * ) real( p ), real( q ),
      &                                 real( elev )
                      end if
-                     if ( outtype .eq. 's' ) then
+                     if ( outtype .eq. 's' .or. outtype .eq. 't' ) then
                         print*, real( p ), real( q ),
      &                          real( elev )
                      end if

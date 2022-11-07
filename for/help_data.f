@@ -1,5 +1,5 @@
       integer          nrec
-      parameter      ( nrec =   101 )
+      parameter      ( nrec =   108 )
       character*(40)   halfrec(2*nrec)
       data halfrec /
      &   "NAME",
@@ -113,9 +113,9 @@
      &   "              Write to standard output (",
      &   "console). The type of the output",
      &   "              to be computed is one of 1",
-     &   ", 2, 3, 5, or s and corresponds",
+     &   ", 2, 3, 5, s, or t and corresponds",
      &   "              to the output requested by",
-     &   " option -1, -2, -3, -5, or -s,",
+     &   " option -1, -2, -3, -5, -s, or -t,",
      &   "              respectively.",
      &   "",
      &   "",
@@ -142,6 +142,20 @@
      &   "of the original point relative",
      &   "              to the QuACK shape model s",
      &   "urface is written to each line.",
+     &   "",
+     &   "",
+     &   "       -t FILE",
+     &   "",
+     &   "              Like -s, but 0.5 is subtra",
+     &   "cted from each map coordinate,",
+     &   "              so that the resultant valu",
+     &   "es are not in the range [0,1] but",
+     &   "              in the range [-0.5,0.5]. T",
+     &   "his implies that the values are",
+     &   "              consistent with the result",
+     &   "s of option -5 in the overlapping",
+     &   "              area.",
+     &   "",
      &   "",
      &   "",
      &   "       --help Print this help message an",
